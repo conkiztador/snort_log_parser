@@ -24,6 +24,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+require 'time'
+
 require './lib/snort_log_parser'
 require './lib/openpaths_location_parser'
 
@@ -63,10 +65,24 @@ class Analyser
     locations = @openpaths_parser.parse(openpathsfile)
     for pair in snort_pairs
       location = match_location(pair, locations)
-      puts "Match: at " + location.to_s
-      puts pair[1].packet
-      puts
-      puts
+      unless location.nil?
+          p1, p2 = pair
+          host = ""
+          text = ""
+          for line in p2.packet.split("\n")
+              tokens = line.split(" ", 17)
+              if tokens.length == 17
+                  text += tokens[16]
+              end
+          end
+          text = text.gsub("..", "\n")
+          if m = /^Host: ?(?<host>.*)\n/.match(text)
+              host = " #{m[:host]}"
+          end
+          if p1.source_ip != p2.destination_ip
+              puts "#{p1.time.utc.iso8601(0)} #{p1.source_ip} #{p2.destination_ip}:#{p2.destination_port} #{location.latitude},#{location.longitude}#{host}"
+          end
+      end
     end
   end
 end
