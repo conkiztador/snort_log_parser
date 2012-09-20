@@ -61,7 +61,7 @@ class Analyser
   end
 
   def analyse(snortfile, openpathsfile, user_ip)
-    snort_pairs = @snort_parser.analyse(snortfile, [user_ip])
+    snort_pairs = @snort_parser.analyse(snortfile, user_ip.split(','))
     locations = @openpaths_parser.parse(openpathsfile)
     for pair in snort_pairs
       location = match_location(pair, locations)
