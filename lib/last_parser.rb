@@ -24,28 +24,38 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-require 'last_parser'
+require 'date'
 
-describe LastParser do
-  before(:each) do
-    @parser = LastParser.new
-  end
-
-  describe "a single entry" do
-    it "should be parsed correctly" do
-      last_file = "test_data/last.txt"
-      parsed = @parser.parse(last_file)
-      parsed.length == 13
-      e = parsed[0]
-      e.user.should == 'stud000'
-      e.ip.should == '1.1.1.1'
-      e.login_time.should == DateTime.new(2012,9,18,05,21,0)
-      e.logout_time.should == DateTime.new(2012,9,18,05,24,0)
-
-      e = parsed[3]
-      e.logout_time.should be_a_kind_of DateTime
-      e.logout_time.to_date.should == Time.local(2012,9,20,16,58,33).to_date
-    end
-  end
-
+class LastEntry
+  attr_accessor :user, :ip, :login_time, :logout_time
 end
+
+"""
+Sample last output:
+stud000  ppp0         2.2.2.2          Tue Sep 18 05:14 - 05:19  (00:04)....
+ubuntu   pts/0        3.3.3.3          Tue Sep 18 03:56   still logged in...
+
+wtmp begins Fri Sep 14 06:41:20 2012
+"""
+
+class LastParser
+  def parse filename
+    last_output = File.read filename
+    lines = last_output.split("\n")
+    entries = []
+    for line in lines[0..-3]
+      e = LastEntry.new
+      e.user, iface, e.ip, time = line.split(" ", 4)
+      times = time.split(" - ")
+      e.login_time = DateTime.strptime(times[0], "%a %b %d %H:%M")
+      e.logout_time = File.mtime(filename).to_datetime
+      if times.length == 2
+        date_str = times[0][0..-6] + times[1][0..5]
+        e.logout_time = DateTime.strptime(date_str, "%a %b %d %H:%M")
+      end
+      entries << e
+    end
+    entries
+  end
+end
+
