@@ -55,6 +55,7 @@ class Analyser
       end
       previous_location = location
     end
+    return previous_location
   end
 
   def analyse(snortfile, openpathsfile, user_ip)
