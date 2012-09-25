@@ -47,11 +47,11 @@ class LastParser
       e = LastEntry.new
       e.user, iface, e.ip, time = line.split(" ", 4)
       times = time.split(" - ")
-      e.login_time = DateTime.strptime(times[0], "%a %b %d %H:%M")
-      e.logout_time = File.mtime(filename).to_datetime
+      e.login_time = DateTime.strptime(times[0], "%a %b %d %H:%M").to_time
+      e.logout_time = File.mtime(filename)
       if times.length == 2
         date_str = times[0][0..-6] + times[1][0..5]
-        e.logout_time = DateTime.strptime(date_str, "%a %b %d %H:%M")
+        e.logout_time = DateTime.strptime(date_str, "%a %b %d %H:%M").to_time
       end
       entries << e
     end

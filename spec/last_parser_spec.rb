@@ -39,12 +39,12 @@ describe LastParser do
       e = parsed[0]
       e.user.should == 'stud000'
       e.ip.should == '1.1.1.1'
-      e.login_time.should == DateTime.new(2012,9,18,05,21,0)
-      e.logout_time.should == DateTime.new(2012,9,18,05,24,0)
+      e.login_time.should be_within(1).of DateTime.new(2012,9,18,05,21,0).to_time
+      e.logout_time.should be_within(1).of DateTime.new(2012,9,18,05,24,0).to_time
 
       e = parsed[3]
-      e.logout_time.should be_a_kind_of DateTime
-      e.logout_time.to_date.should == Time.local(2012,9,20,16,58,33).to_date
+      e.logout_time.should be_a_kind_of Time
+      e.logout_time.should be_within(1).of Time.local(2012,9,20,16,58,33)
     end
   end
 

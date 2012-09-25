@@ -54,8 +54,22 @@ class SnortLogParser
     entry.datagram_length = parsed_array[9].to_i
     entry.time = parse_time(parsed_array[1], parsed_array[2])
     entry.packet = entry_text
+    entry.text = rebuild_packet_text entry.packet
     entry
   end
+
+  def rebuild_packet_text packet
+      text = ""
+      # Collect the ascii packet contents
+      for line in packet.split("\n")
+          tokens = line.split(" ", 17)
+          if tokens.length == 17
+              text += tokens[16]
+          end
+      end
+      text.gsub("..", "\n")
+  end
+
 
   # Parse the time
   # * *Args* :
@@ -65,15 +79,7 @@ class SnortLogParser
   #   - Returns the time parsed as a +Time+ object
   #
   def parse_time(date_string, time_string)
-    date_match = /(\d+)\/(\d+)/.match(date_string)
-    month = date_match[1]
-    day = date_match[2]
-
-    time_match = /(\d+):(\d+):(\d+)\.(\d+)/.match(time_string)
-    hour = time_match[1]
-    minute = time_match[2]
-    second = time_match[3]
-    Time.utc(2012, month, day, hour, minute, second)
+    DateTime.strptime("#{date_string} #{time_string}" , "%m/%d %H:%M:%S.%L").to_time
   end
 
   # Parse the given snort log file into a list of Entry objects
@@ -141,7 +147,7 @@ class SnortLogParser
 end
 
 class Entry
-  attr_accessor :source_ip, :destination_ip, :datagram_length, :packet, :time, :source_port, :destination_port
+  attr_accessor :source_ip, :destination_ip, :datagram_length, :packet, :time, :source_port, :destination_port, :text
 
   def initialize(hash = nil)
     hash.each do |k,v| 

@@ -174,4 +174,37 @@ describe Analyser do
       it "should work for multiple locations"
     end
   end
+
+    describe "login matching" do
+        before(:each) do
+            @logins = [
+                mock(:ip => '1.1.1.1', :login_time => Time.at(190199),
+                     :logout_time => Time.at(190201)),
+                mock(:ip => '1.1.1.1', :login_time => Time.at(190201),
+                     :logout_time => Time.at(190202)),
+                mock(:ip => '1.1.1.2', :login_time => Time.at(190199),
+                     :logout_time => Time.at(190201)),
+            ]
+        end
+        it "should match IP and current time to a user login session" do
+            rv = @analyser.match_logins(@logins, '1.1.1.1', Time.at(190200))
+            rv.should == @logins[0..0]
+        end
+        it "should match the correct IP" do
+            rv = @analyser.match_logins(@logins, '1.1.1.2', Time.at(190200))
+            rv.should == @logins[2..2]
+        end
+        it "should match times inclusively" do
+            rv = @analyser.match_logins(@logins, '1.1.1.1', Time.at(190201))
+            rv.should == @logins[0..1]
+        end
+        it "should return nothing if the IP isn't known" do
+            rv = @analyser.match_logins(@logins, '1.1.1.3', Time.at(190200))
+            rv.should == []
+        end
+        it "should return nothing if the time doesn't match" do
+            rv = @analyser.match_logins(@logins, '1.1.1.1', Time.at(190205))
+            rv.should == []
+        end
+  end
 end
