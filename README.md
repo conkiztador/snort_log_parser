@@ -24,7 +24,7 @@ Use the rake command to run the rspec tests:
 
 The analyser can also run from the command line:
 
-    ruby lib/analyse.rb snort_input_file openpaths_json_file user_ip_address
+    ruby lib/analyse.rb snort_input_file openpaths_json_dir last_cmd_output_file
 
 # An example usage
 
@@ -168,25 +168,30 @@ Make sure its still connected to the VPN, and navigate to some web pages. For ex
     exit
     exit
 
+
 ## Copy the log file to the local PC
-    
+
     scp ubuntu@115.146.94.29:/home/ubuntu/log_20120515.tgz .
     tar -zvxf
 
+## Capture the output of the 'last' command
+
+    ssh ubuntu@hostname last > last.txt
+
 ## Get the openpaths data
 
-You can download the location data for your mobile device from https://openpaths.cc/
+You can download the location data for your mobile device from https://openpaths.cc/. Copy it to a new directory with a name matching the VPN username (e.g., kspear.json)
 
 
 ## Run analyse.rb
 
 Run analyse. The usage is:
 
-    ruby analyse.rb snort_input_file openpaths_json_file user_ip_address
+    ruby analyse.rb snort_input_file openpaths_json_dir last_cmd_output_file
 
 So, for example:
 
-    ruby analyse.rb traffic_data/log_20120515/snort.log.1337044274.txt location_data/openpaths_gregorydavidlong.json 1.139.177.134
+    ruby analyse.rb traffic_data/log_20120515/snort.log.1337044274.txt location_data/openpaths/ last.txt
 
 A list of datagrams with their corresponding locations for the nominated mobile device IP address should be displayed.
 
@@ -196,5 +201,4 @@ A list of datagrams with their corresponding locations for the nominated mobile 
 * Make the output neater and easier to read
 * Add graphical data visualisation
 * Finish incomplete unit tests
-* Add automatic parsing of output from `last` command for selection of IP address. This will also require adding a date range for which we are interested in the IP address.
 * Add parsing of KML location data

@@ -121,13 +121,13 @@ end
 
 # command line arguments
 if ARGV.length < 3
-  puts "Usage: ruby analyse.rb snort_input_file openpaths_json_file user_ip_address"
+  puts "Usage: ruby analyse.rb snort_input_file openpaths_directory last_cmd_output_file"
 else
   snortfile = ARGV[0]
-  openpathsfile = ARGV[1]
-  user_ip = ARGV[2]
+  openpathsdir = ARGV[1]
+  lastfile = ARGV[2]
   analyser = Analyser.new
-  analyser.analyse(snortfile, openpathsfile, user_ip)
+  analyser.analyse(snortfile, openpathsdir, lastfile)
 end
 
 
