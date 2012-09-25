@@ -37,20 +37,33 @@ class Analyser
     @last_parser = LastParser.new
   end
 
-  # Find a location for the specified pair
-  def match_location(snort_pair, locations)
-    desired_time = snort_pair[0].time
+  def load_location_data openpathsdir
+    locations_per_user = Hash.new
+    Dir.glob(openpathsdir + '/*.json').each do |openpathsfile|
+      locations = @openpaths_parser.parse(openpathsfile)
+      m = /(?<name>[a-zA-Z\d]*)\.json$/.match(openpathsfile)
+      locations_per_user[m[:name]] = locations
+    end
+    locations_per_user
+  end
 
+  def match_user_location(user, time, locations_per_user)
+      user_locations = locations_per_user[user]
+      match_location(time, user_locations) unless user_locations.nil?
+  end
+
+  # Find a location for the specified time
+  def match_location(time, locations)
     previous_location = nil
     #assumes locations are in chronological order
     for location in locations
       #If we have an exact match then just return the location for that time
-      return location if location.time == desired_time
+      return location if location.time == time
 
-      if location.time > desired_time
+      if location.time > time
         #find the closest out of the current and previous location
-        previous_diff = desired_time - previous_location.time
-        current_diff = location.time - desired_time
+        previous_diff = time - previous_location.time
+        current_diff = location.time - time
         if previous_diff <= current_diff
           return previous_location
         else
@@ -79,28 +92,28 @@ class Analyser
       end
   end
 
-  def analyse(snortfile, openpathsfile, last_file)
+  def analyse(snortfile, openpathsdir, last_file)
     logins = @last_parser.parse(last_file)
     snort_pairs = @snort_parser.analyse(snortfile, get_user_ips(logins))
-    locations = @openpaths_parser.parse(openpathsfile)
+    locations_per_user = load_location_data(openpathsdir)
 
     for pair in snort_pairs
-      location = match_location(pair, locations)
-      unless location.nil?
-        # p1 is the user client request, p2 is the VPN request
-        p1, p2 = pair
-        # Find users that were active at this time via the source IP
-        users = match_logins(logins, p1.source_ip, p1.time)
-                  .collect {|l| l.user }
-                  .uniq
-                  .join(',')
-        host = extract_host p2.text
-        host = "(unknown)" if host.nil?
-        if p1.source_ip != p2.destination_ip
-            puts "#{users} #{p1.time.utc.iso8601(0)} #{p1.source_ip} " \
-                 "#{p2.destination_ip}:#{p2.destination_port} "        \
-                 "#{location.latitude},#{location.longitude} #{host}"
-        end
+      # p1 is the user client request, p2 is the VPN request
+      p1, p2 = pair
+      # Find users that were active at this time via the source IP
+      users = match_logins(logins, p1.source_ip, p1.time)
+                .collect {|l| l.user }
+                .uniq
+      user = users[0]
+      latitude, longitude = 0, 0
+      loc = match_user_location(user, p1.time, locations_per_user)
+      latitude, longitude = loc.latitude, loc.longitude unless loc.nil?
+      host = extract_host p2.text
+      host = "(unknown)" if host.nil?
+      if p1.source_ip != p2.destination_ip
+          puts "#{users.join(',')} #{p1.time.utc.iso8601(0)} #{p1.source_ip} " \
+               "#{p2.destination_ip}:#{p2.destination_port} "        \
+               "#{latitude},#{longitude} #{host}"
       end
     end
   end
