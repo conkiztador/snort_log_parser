@@ -180,8 +180,7 @@ Make sure its still connected to the VPN, and navigate to some web pages. For ex
 
 ## Get the openpaths data
 
-You can download the location data for your mobile device from https://openpaths.cc/. Copy it to a new directory with a name matching the VPN username (e.g., kspear.json)
-
+You can download the location data for your mobile device in JSON format from https://openpaths.cc/. Copy the file to a new directory with a name matching the VPN username (e.g., kspear.json). You can do this for each individual user on the VPN. The app will load them all and match the username/time data with OpenPaths entries.
 
 ## Run analyse.rb
 
